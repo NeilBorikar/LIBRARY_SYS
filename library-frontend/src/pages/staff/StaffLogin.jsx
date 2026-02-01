@@ -3,12 +3,17 @@ import { useNavigate } from "react-router-dom";
 function StaffLogin() {
   const navigate = useNavigate();
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    navigate("/staff/dashboard"); // dashboard comes next
+  };
+
   return (
     <div className="login-container">
       <h2>College Staff Login</h2>
 
-      <form className="login-form">
-        <input type="text" placeholder="Staff ID / Email" />
+      <form className="login-form" onSubmit={handleSubmit}>
+        <input type="text" placeholder="Employee ID / Email" />
         <input type="password" placeholder="Password" />
 
         <button type="submit">Login</button>
