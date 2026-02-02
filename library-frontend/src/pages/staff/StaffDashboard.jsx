@@ -1,4 +1,7 @@
+import { useNavigate } from "react-router-dom";
+
 function StaffDashboard() {
+    const navigate = useNavigate();
   // TEMP: frontend-only state
   const isDepositPaid = false; // later comes from backend
 
@@ -26,10 +29,18 @@ function StaffDashboard() {
 
       {/* Actions */}
       <div className="staff-actions">
-        <button>Books Issued</button>
-        <button>Books Returned</button>
-        <button>Fine History</button>
+        <button onClick={() => navigate("/staff/books-issued")}>
+            Books Issued
+        </button>
 
+        <button onClick={() => navigate("/staff/books-returned")}>
+            Books Returned
+        </button>
+
+        <button onClick={() => navigate("/staff/fine-history")}>
+            Fine History
+        </button>
+        
         {!isDepositPaid && (
           <button className="pay-deposit-btn">
             Pay Security Deposit
