@@ -1,57 +1,51 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException
+from typing import List
+
 from app.repositories.library_staff_repo import LibraryStaffRepository
-from app.repositories.book_repo import BookRepository
-from app.repositories.transaction_repo import TransactionRepository
-from app.models.library_staff import LibraryStaffCreate, LibraryStaffResponse
+from app.models.library_staff import (
+    LibraryStaffRegister,
+    IssueBookRequest,
+    ReturnBookRequest,
+    CollectFineRequest
+)
+from app.models.transaction import IssueTransactionResponse
 
-router = APIRouter(prefix="/library-staff", tags=["Library Staff"])
-
-library_staff_repo = LibraryStaffRepository()
-book_repo = BookRepository()
-transaction_repo = TransactionRepository()
+router = APIRouter()
+library_repo = LibraryStaffRepository()
 
 
-@router.post("/register", response_model=LibraryStaffResponse)
-def register_library_staff(staff: LibraryStaffCreate):
-    staff_id = library_staff_repo.create_library_staff(staff.dict())
-    created_staff = library_staff_repo.find_by_id(staff_id)
-    created_staff["id"] = str(created_staff["_id"])
-    return created_staff
+@router.post("/register")
+def register_library_staff(data: LibraryStaffRegister):
+    try:
+        library_repo.create_library_staff(data.dict())
+        return {"message": "Library staff created"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/issue-book")
-def issue_book(user_id: str, user_role: str, book_id: str):
-    success = book_repo.update_availability(book_id, -1)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Book not available"
-        )
-
-    transaction_repo.log_transaction({
-        "action": "ISSUE",
-        "user_id": user_id,
-        "user_role": user_role,
-        "book_id": book_id
-    })
-
+def issue_book(data: IssueBookRequest):
+    library_repo.issue_book(**data.dict())
     return {"message": "Book issued successfully"}
 
 
 @router.post("/return-book")
-def return_book(user_id: str, user_role: str, book_id: str):
-    success = book_repo.update_availability(book_id, 1)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid return operation"
-        )
-
-    transaction_repo.log_transaction({
-        "action": "RETURN",
-        "user_id": user_id,
-        "user_role": user_role,
-        "book_id": book_id
-    })
-
+def return_book(data: ReturnBookRequest):
+    library_repo.return_book(**data.dict())
     return {"message": "Book returned successfully"}
+
+
+@router.post("/collect-fine")
+def collect_fine(data: CollectFineRequest):
+    library_repo.collect_fine(**data.dict())
+    return {"message": "Fine collected"}
+
+
+@router.get("/books-issued", response_model=List[IssueTransactionResponse])
+def issued_books():
+    return library_repo.get_issued_books()
+
+
+@router.get("/books-returned", response_model=List[IssueTransactionResponse])
+def returned_books():
+    return library_repo.get_returned_books()

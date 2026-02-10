@@ -1,13 +1,18 @@
-from fastapi import APIRouter, HTTPException, status
-from datetime import datetime
+from fastapi import APIRouter
+from datetime import date
+
 from app.repositories.admin_repo import AdminRepository
+from app.models.admin import AdminDashboardMetrics, AdminDailyReport
 
-router = APIRouter(prefix="/admin", tags=["Admin"])
-
+router = APIRouter()
 admin_repo = AdminRepository()
 
 
-@router.get("/transactions")
-def get_all_transactions():
-    transactions = admin_repo.get_daily_transactions(datetime.utcnow())
-    return {"count": len(transactions), "transactions": transactions}
+@router.get("/dashboard", response_model=AdminDashboardMetrics)
+def admin_dashboard():
+    return admin_repo.get_dashboard_metrics()
+
+
+@router.get("/reports", response_model=AdminDailyReport)
+def daily_report(report_date: date):
+    return admin_repo.get_daily_report(report_date)

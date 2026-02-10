@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional
-from bson import ObjectId
+from bson import ObjectId, errors
 from pymongo.collection import Collection
 
 
@@ -23,19 +23,23 @@ class BaseRepository:
     # READ
     # -----------------------------
     def find_by_id(self, document_id: str) -> Optional[Dict[str, Any]]:
-        return self.collection.find_one(
-            {"_id": ObjectId(document_id)}
-        )
+        try:
+            return self.collection.find_one(
+                {"_id": ObjectId(document_id)}
+            )
+        except (errors.InvalidId, TypeError):
+            return None
 
     def find_one(self, query: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         return self.collection.find_one(query)
 
     def find_many(
         self,
-        query: Dict[str, Any] = {},
+        query: Optional[Dict[str, Any]] = None,
         limit: int = 100,
         skip: int = 0
     ) -> List[Dict[str, Any]]:
+        query = query or {}
         cursor = self.collection.find(query).skip(skip).limit(limit)
         return list(cursor)
 

@@ -1,37 +1,107 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
-from app.database import students_collection
+from app.database import (
+    students_collection,
+    issues_collection,
+    returns_collection,
+    fines_collection
+)
 from app.repositories.base_repo import BaseRepository
-from app.utils.password import hash_password
+from app.utils.password import hash_password, verify_password
 
 
 class StudentRepository(BaseRepository):
     def __init__(self):
         super().__init__(students_collection)
 
-    def create_student(self, student_data: dict) -> str:
-        # Enforce uniqueness
-        if self.find_one({"email": student_data["email"]}):
+    # -------------------------
+    # REGISTER
+    # -------------------------
+    def create_student(self, data: dict) -> str:
+        if self.find_one({"email": data["email"]}):
             raise ValueError("Student with this email already exists")
 
-        if self.find_one({"prn": student_data["prn"]}):
+        if self.find_one({"prn": data["prn"]}):
             raise ValueError("Student with this PRN already exists")
 
-        student_data["password"] = hash_password(student_data["password"])
-        student_data["created_at"] = datetime.utcnow()
+        data["password"] = hash_password(data["password"])
+        data["created_at"] = datetime.utcnow()
+        data["updated_at"] = None
 
-        return self.insert_one(student_data)
+        return self.insert_one(data)
 
-    def get_student_by_email(self, email: str) -> Optional[dict]:
-        return self.find_one({"email": email})
+    # -------------------------
+    # LOGIN
+    # -------------------------
+    def authenticate_student(
+        self,
+        prn_or_email: str,
+        password: str
+    ) -> Optional[dict]:
 
-    def get_student_by_id(self, student_id: str) -> Optional[dict]:
-        return self.find_by_id(student_id)
+        student = self.find_one({
+            "$or": [
+                {"email": prn_or_email},
+                {"prn": prn_or_email}
+            ]
+        })
 
-    def update_student(self, student_id: str, update_data: dict) -> bool:
-        update_data["updated_at"] = datetime.utcnow()
-        return self.update_one(
-            {"_id": self.collection._id.__class__(student_id)},
-            update_data
+        if not student:
+            return None
+
+        if not verify_password(password, student["password"]):
+            return None
+
+        return student
+
+    # -------------------------
+    # DASHBOARD
+    # -------------------------
+    def get_dashboard_data(self, prn: str) -> dict:
+        issued_count = issues_collection.count_documents({
+            "user_type": "student",
+            "user_id": prn,
+            "status": "issued"
+        })
+
+        total_fine_amount = sum(
+            fine.get("amount", 0)
+            for fine in fines_collection.find({
+                "user_type": "student",
+                "user_id": prn
+            })
+        )
+
+        return {
+            "active_issues": issued_count,
+            "total_fine_amount": total_fine_amount
+        }
+
+    # -------------------------
+    # BOOKS
+    # -------------------------
+    def get_issued_books(self, prn: str) -> List[dict]:
+        return list(
+            issues_collection.find({
+                "user_type": "student",
+                "user_id": prn,
+                "status": "issued"
+            })
+        )
+
+    def get_returned_books(self, prn: str) -> List[dict]:
+        return list(
+            returns_collection.find({
+                "user_type": "student",
+                "user_id": prn
+            })
+        )
+
+    def get_fine_history(self, prn: str) -> List[dict]:
+        return list(
+            fines_collection.find({
+                "user_type": "student",
+                "user_id": prn
+            })
         )

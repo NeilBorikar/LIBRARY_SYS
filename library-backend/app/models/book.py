@@ -1,22 +1,26 @@
 from pydantic import BaseModel, Field
+from typing import Optional
 from datetime import datetime
 
 
-class BookBase(BaseModel):
-    title: str
-    author: str
-    isbn: str
-    total_copies: int = Field(..., ge=1)
-    available_copies: int = Field(..., ge=0)
+# ---------- REQUEST ----------
+
+class BookCreate(BaseModel):
+    book_name: str
+    author: Optional[str] = None
+    isbn: Optional[str] = None
+    quantity: int = Field(..., ge=0)
 
 
-class BookCreate(BookBase):
-    pass
+class BookUpdateQuantity(BaseModel):
+    quantity: int = Field(..., ge=0)
 
 
-class BookResponse(BookBase):
+# ---------- RESPONSE ----------
+
+class BookResponse(BaseModel):
     id: str
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
+    book_name: str
+    author: Optional[str]
+    isbn: Optional[str]
+    quantity: int

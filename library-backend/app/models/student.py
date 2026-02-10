@@ -1,33 +1,39 @@
 from pydantic import BaseModel, EmailStr, Field
+from typing import List, Optional
 from datetime import datetime
-from typing import Optional
 
 
-# -----------------------------
-# BASE MODEL (COMMON FIELDS)
-# -----------------------------
-class StudentBase(BaseModel):
-    name: str = Field(..., min_length=2)
+# ---------- REQUEST SCHEMAS ----------
+
+class StudentRegister(BaseModel):
     prn: str = Field(..., min_length=5)
+    name: str
     email: EmailStr
-    department: str
-    year: int = Field(..., ge=1, le=4)
-    mobile: str = Field(..., min_length=10, max_length=10)
-
-
-# -----------------------------
-# CREATE MODEL (INPUT)
-# -----------------------------
-class StudentCreate(StudentBase):
+    branch: str
     password: str = Field(..., min_length=6)
 
 
-# -----------------------------
-# RESPONSE MODEL (OUTPUT)
-# -----------------------------
-class StudentResponse(StudentBase):
-    id: str
-    created_at: datetime
+class StudentLogin(BaseModel):
+    identifier: str  # email or PRN
+    password: str
 
-    class Config:
-        from_attributes = True
+
+# ---------- RESPONSE SCHEMAS ----------
+
+class StudentDashboardResponse(BaseModel):
+    active_issues: int
+    total_fine_amount: int
+
+
+class StudentBookResponse(BaseModel):
+    book_id: str
+    issue_date: datetime
+    due_date: Optional[datetime] = None
+    status: str
+
+
+class StudentFineResponse(BaseModel):
+    book_id: str
+    amount: int
+    payment_mode: str
+    paid_at: datetime
