@@ -4,6 +4,10 @@ import LoginNav from "./components/LoginNav.jsx";
 
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminLibraryStaff from "./pages/admin/AdminLibraryStaff";
+import AdminStudents from "./pages/admin/AdminStudents";
+import AdminStaff from "./pages/admin/AdminStaff";
+import AdminReports from "./pages/admin/AdminReports";
 
 import LibraryLogin from "./pages/library/LibraryLogin";
 import LibraryDashboard from "./pages/library/LibraryDashboard";
@@ -37,6 +41,10 @@ function App() {
 
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/library-staff" element={<AdminLibraryStaff />} />
+        <Route path="/admin/students" element={<AdminStudents />} />
+        <Route path="/admin/staff" element={<AdminStaff />} />
+        <Route path="/admin/reports" element={<AdminReports />} />
 
         <Route path="/library/login" element={<LibraryLogin />} />
         <Route path="/library/dashboard" element={<LibraryDashboard />} />
