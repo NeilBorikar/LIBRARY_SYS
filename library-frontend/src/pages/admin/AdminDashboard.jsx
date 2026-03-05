@@ -1,12 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
-  Shield, 
-  Users, 
-  GraduationCap, 
-  BookOpen, 
-  BarChart3, 
-  Settings, 
+import { useState, useEffect } from "react";
+import api from "../../api/axios";
+import {
+  Shield,
+  Users,
+  GraduationCap,
+  BookOpen,
+  BarChart3,
+  Settings,
   LogOut,
   TrendingUp,
   BookMarked,
@@ -15,15 +17,35 @@ import {
 
 function AdminDashboard() {
   const navigate = useNavigate();
+  const [metrics, setMetrics] = useState({
+    total_books: 0,
+    active_students: 0,
+    total_library_staff: 0,
+    total_issued_books: 0
+  });
+
+  useEffect(() => {
+    fetchDashboardMetrics();
+  }, []);
+
+  const fetchDashboardMetrics = async () => {
+    try {
+      const response = await api.get('/admin/dashboard');
+      setMetrics(response.data);
+    } catch (error) {
+      console.error("Failed to fetch admin metrics:", error);
+    }
+  };
 
   const handleLogout = () => {
+    localStorage.clear();
     navigate("/");
   };
 
   const statsData = [
     {
       title: "Total Books",
-      value: "12,456",
+      value: metrics.total_books,
       change: "+12.5%",
       icon: <BookOpen className="w-6 h-6" />,
       color: "from-blue-500 to-blue-600",
@@ -31,7 +53,7 @@ function AdminDashboard() {
     },
     {
       title: "Active Students",
-      value: "3,847",
+      value: metrics.active_students,
       change: "+8.2%",
       icon: <GraduationCap className="w-6 h-6" />,
       color: "from-green-500 to-green-600",
@@ -39,7 +61,7 @@ function AdminDashboard() {
     },
     {
       title: "Library Staff",
-      value: "24",
+      value: metrics.total_library_staff,
       change: "+2",
       icon: <Users className="w-6 h-6" />,
       color: "from-purple-500 to-purple-600",
@@ -47,7 +69,7 @@ function AdminDashboard() {
     },
     {
       title: "Books Issued",
-      value: "1,234",
+      value: metrics.total_issued_books,
       change: "+18.7%",
       icon: <BookMarked className="w-6 h-6" />,
       color: "from-orange-500 to-orange-600",
@@ -127,7 +149,7 @@ function AdminDashboard() {
                 </div>
               </div>
             </motion.div>
-            
+
             <motion.div variants={itemVariants} className="flex items-center space-x-3">
               <button className="p-2 text-secondary-600 hover:text-secondary-800 hover:bg-secondary-100 rounded-lg transition-colors">
                 <Settings className="w-5 h-5" />
@@ -181,7 +203,7 @@ function AdminDashboard() {
           animate="visible"
           variants={containerVariants}
         >
-          <motion.h2 
+          <motion.h2
             className="text-2xl font-bold text-secondary-800 mb-6"
             variants={itemVariants}
           >

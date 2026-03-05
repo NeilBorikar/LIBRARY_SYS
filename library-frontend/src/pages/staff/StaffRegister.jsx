@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Users, Lock, Mail, Phone, Building, ArrowRight, Eye, EyeOff } from "lucide-react";
+import api from "../../api/axios";
 
 function StaffRegister() {
   const navigate = useNavigate();
@@ -51,12 +52,21 @@ function StaffRegister() {
 
     setIsLoading(true);
     setError("");
-    
-    // Simulate registration delay
-    setTimeout(() => {
-      setIsLoading(false);
+
+    try {
+      await api.post("/staff/register", {
+        emp_id: formData.empId,
+        email: formData.email,
+        mobile: formData.mobile,
+        department: formData.department,
+        password: formData.password
+      });
       navigate("/staff/login");
-    }, 1500);
+    } catch (err) {
+      setError(err.response?.data?.detail || "Registration failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const containerVariants = {
@@ -272,7 +282,7 @@ function StaffRegister() {
           <div className="mt-6 text-center">
             <p className="text-secondary-600">
               Already have an account?{" "}
-              <span 
+              <span
                 onClick={() => navigate("/staff/login")}
                 className="text-primary-600 hover:text-primary-700 font-medium cursor-pointer transition-colors"
               >

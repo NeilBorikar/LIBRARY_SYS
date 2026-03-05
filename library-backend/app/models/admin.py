@@ -1,6 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 from typing import List
 from datetime import datetime
+
+class AdminRegister(BaseModel):
+    name: str
+    email: EmailStr
+    password: str = Field(..., min_length=6)
 
 
 class AdminDashboardMetrics(BaseModel):

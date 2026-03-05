@@ -2,21 +2,38 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { GraduationCap, Lock, Mail, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
+import api from "../../api/axios";
 
 function StudentLogin() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate authentication delay
-    setTimeout(() => {
+    setError(""); // Reset error state
+
+    try {
+      // API call to login
+      const response = await api.post("/auth/login", {
+        role: "student",
+        identifier: e.target[0].value, // Email/PRN input
+        password: e.target[1].value,   // Password input
+      });
+
+      if (response.data.message === "Login successful") {
+        localStorage.setItem("role", response.data.role);
+        localStorage.setItem("userIdentifier", e.target[0].value);
+        navigate("/student/dashboard");
+      }
+    } catch (err) {
+      console.error("Login failed:", err);
+      setError(err.response?.data?.detail || "Login failed. Please check your credentials.");
+    } finally {
       setIsLoading(false);
-      navigate("/student/dashboard");
-    }, 1500);
+    }
   };
 
   const containerVariants = {
@@ -61,6 +78,11 @@ function StudentLogin() {
           className="form-container"
           variants={itemVariants}
         >
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm text-center">{error}</p>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div className="space-y-2">
@@ -146,7 +168,7 @@ function StudentLogin() {
           <div className="mt-6 text-center">
             <p className="text-secondary-600">
               New Student?{" "}
-              <span 
+              <span
                 onClick={() => navigate("/student/register")}
                 className="text-primary-600 hover:text-primary-700 font-medium cursor-pointer transition-colors"
               >

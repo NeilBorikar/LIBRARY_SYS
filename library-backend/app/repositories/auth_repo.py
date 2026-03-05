@@ -3,7 +3,8 @@ from typing import Optional
 from app.database import (
     students_collection,
     staff_collection,
-    library_staff_collection
+    library_staff_collection,
+    admins_collection
 )
 from app.utils.password import verify_password
 
@@ -26,6 +27,10 @@ class AuthRepository:
         "library_staff": {
             "collection": library_staff_collection,
             "id_fields": ["email", "staff_id"]
+        },
+        "admin": {
+            "collection": admins_collection,
+            "id_fields": ["email"]
         }
     }
 

@@ -7,9 +7,10 @@ from datetime import datetime
 
 class StudentRegister(BaseModel):
     prn: str = Field(..., min_length=5)
-    name: str
+    name: str = "Student"
     email: EmailStr
     branch: str
+    mobile: Optional[str] = None
     password: str = Field(..., min_length=6)
 
 
@@ -27,13 +28,16 @@ class StudentDashboardResponse(BaseModel):
 
 class StudentBookResponse(BaseModel):
     book_id: str
+    book_name: str
     issue_date: datetime
+    return_date: Optional[datetime] = None
     due_date: Optional[datetime] = None
     status: str
 
 
 class StudentFineResponse(BaseModel):
     book_id: str
+    book_name: str
     amount: int
     payment_mode: str
     paid_at: datetime

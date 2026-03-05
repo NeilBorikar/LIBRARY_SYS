@@ -13,6 +13,7 @@ db = client[settings.MONGO_DB_NAME]
 students_collection = db.students
 staff_collection = db.staff
 library_staff_collection = db.library_staff
+admins_collection = db.admins
 
 books_collection = db.books
 

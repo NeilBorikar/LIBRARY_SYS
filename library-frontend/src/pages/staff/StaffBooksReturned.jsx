@@ -1,19 +1,29 @@
+import { useState, useEffect } from "react";
+import api from "../../api/axios";
+
 function StaffBooksReturned() {
-  // Dummy data for UI
-  const returnedBooks = [
-    {
-      id: 1,
-      name: "Machine Learning",
-      issueDate: "2025-12-15",
-      returnDate: "2025-12-30",
-    },
-    {
-      id: 2,
-      name: "Computer Graphics",
-      issueDate: "2025-11-05",
-      returnDate: "2025-11-20",
-    },
-  ];
+  const [returnedBooks, setReturnedBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const empId = localStorage.getItem("userIdentifier");
+        if (empId) {
+          const response = await api.get(`/staff/books-returned?emp_id=${empId}`);
+          setReturnedBooks(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch returned books:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooks();
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="staff-books-page">
@@ -35,11 +45,11 @@ function StaffBooksReturned() {
 
           <tbody>
             {returnedBooks.map((book, index) => (
-              <tr key={book.id}>
+              <tr key={book.transaction_id || index}>
                 <td>{index + 1}</td>
-                <td>{book.name}</td>
-                <td>{book.issueDate}</td>
-                <td>{book.returnDate}</td>
+                <td>{book.book_name || book.name || "Unknown"}</td>
+                <td>{book.issue_date || book.issueDate}</td>
+                <td>{book.return_date || book.returnDate}</td>
                 <td className="status-returned">Returned</td>
               </tr>
             ))}

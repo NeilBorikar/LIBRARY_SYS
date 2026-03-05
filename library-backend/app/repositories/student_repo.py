@@ -1,11 +1,13 @@
 from datetime import datetime
 from typing import List, Optional
+from bson import ObjectId
 
 from app.database import (
     students_collection,
     issues_collection,
     returns_collection,
-    fines_collection
+    fines_collection,
+    books_collection
 )
 from app.repositories.base_repo import BaseRepository
 from app.utils.password import hash_password, verify_password
@@ -81,27 +83,33 @@ class StudentRepository(BaseRepository):
     # -------------------------
     # BOOKS
     # -------------------------
+    def _add_book_details(self, record: dict) -> dict:
+        if "book_id" in record:
+            book = books_collection.find_one({"_id": ObjectId(record["book_id"])})
+            record["book_name"] = book["book_name"] if book else "Unknown Book"
+            record["book_id"] = str(record["book_id"])
+        if "_id" in record:
+            record["_id"] = str(record["_id"])
+        return record
+
     def get_issued_books(self, prn: str) -> List[dict]:
-        return list(
-            issues_collection.find({
-                "user_type": "student",
-                "user_id": prn,
-                "status": "issued"
-            })
-        )
+        records = list(issues_collection.find({
+            "user_type": "student",
+            "user_id": prn,
+            "status": "issued"
+        }))
+        return [self._add_book_details(r) for r in records]
 
     def get_returned_books(self, prn: str) -> List[dict]:
-        return list(
-            returns_collection.find({
-                "user_type": "student",
-                "user_id": prn
-            })
-        )
+        records = list(returns_collection.find({
+            "user_type": "student",
+            "user_id": prn
+        }))
+        return [self._add_book_details(r) for r in records]
 
     def get_fine_history(self, prn: str) -> List[dict]:
-        return list(
-            fines_collection.find({
-                "user_type": "student",
-                "user_id": prn
-            })
-        )
+        records = list(fines_collection.find({
+            "user_type": "student",
+            "user_id": prn
+        }))
+        return [self._add_book_details(r) for r in records]

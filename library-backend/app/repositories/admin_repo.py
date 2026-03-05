@@ -2,16 +2,31 @@ from datetime import datetime, date, time
 from typing import List, Dict
 
 from app.database import (
+    admins_collection,
     issues_collection,
     returns_collection,
     fines_collection,
     books_collection
 )
-
+from app.utils.password import hash_password
 
 class AdminRepository:
     def __init__(self):
         pass
+
+    def create_admin(self, data: dict) -> str:
+        if admins_collection.find_one({"email": data["email"]}):
+            raise ValueError("Admin with this email already exists")
+
+        data["password"] = hash_password(data["password"])
+        data["created_at"] = datetime.utcnow()
+        data["updated_at"] = None
+
+        result = admins_collection.insert_one(data)
+        print("DATA RECEIVED:", data)
+        print("PASSWORD FIELD:", data.get("password"))
+        print("TYPE:", type(data.get("password")))
+        return str(result.inserted_id)
 
     # -------------------------
     # DASHBOARD METRICS

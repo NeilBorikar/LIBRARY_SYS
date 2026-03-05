@@ -1,11 +1,33 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { GraduationCap, LogOut, ArrowLeft, BookMarked, RotateCcw, DollarSign } from "lucide-react";
+import { useEffect, useState } from "react";
+import api from "../../api/axios";
 
 function StudentDashboard() {
   const navigate = useNavigate();
+  const [stats, setStats] = useState({ active_issues: 0, total_fine_amount: 0 });
+  const [userPrn, setUserPrn] = useState("Student");
+
+  useEffect(() => {
+    const prn = localStorage.getItem("userIdentifier");
+    if (prn) {
+      setUserPrn(prn);
+      fetchDashboardData(prn);
+    }
+  }, []);
+
+  const fetchDashboardData = async (prn) => {
+    try {
+      const response = await api.get(`/student/dashboard?prn=${prn}`);
+      setStats(response.data);
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error);
+    }
+  };
 
   const handleLogout = () => {
+    localStorage.clear();
     navigate("/");
   };
 
@@ -14,7 +36,7 @@ function StudentDashboard() {
       title: "Books Issued",
       icon: <BookMarked className="w-5 h-5" />,
       route: "/student/books-issued",
-      description: "View your issued books"
+      description: `View your ${stats.active_issues} issued books`
     },
     {
       title: "Books Returned",
@@ -26,7 +48,7 @@ function StudentDashboard() {
       title: "Fine Paid",
       icon: <DollarSign className="w-5 h-5" />,
       route: "/student/fine-paid",
-      description: "View fine payment history"
+      description: `Total fine paid: ₹${stats.total_fine_amount}`
     }
   ];
 
@@ -70,10 +92,10 @@ function StudentDashboard() {
               </div>
               <div>
                 <h1 className="text-xl font-bold">Student Dashboard</h1>
-                <p className="text-orange-100 text-sm">Logged in as: <span className="font-medium">Student</span></p>
+                <p className="text-orange-100 text-sm">Logged in as: <span className="font-medium">{userPrn}</span></p>
               </div>
             </motion.div>
-            
+
             <motion.div variants={itemVariants} className="flex items-center space-x-3">
               <button className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
                 <ArrowLeft className="w-5 h-5" />

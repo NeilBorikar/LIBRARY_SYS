@@ -1,19 +1,29 @@
+import { useState, useEffect } from "react";
+import api from "../../api/axios";
+
 function StaffBooksIssued() {
-  // Dummy data for UI
-  const issuedBooks = [
-    {
-      id: 1,
-      name: "Software Engineering",
-      issueDate: "2026-01-08",
-      dueDate: "2026-01-22",
-    },
-    {
-      id: 2,
-      name: "Artificial Intelligence",
-      issueDate: "2026-01-02",
-      dueDate: "2026-01-16",
-    },
-  ];
+  const [issuedBooks, setIssuedBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const empId = localStorage.getItem("userIdentifier");
+        if (empId) {
+          const response = await api.get(`/staff/books-issued?emp_id=${empId}`);
+          setIssuedBooks(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch issued books:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooks();
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="staff-books-page">
@@ -34,11 +44,11 @@ function StaffBooksIssued() {
 
           <tbody>
             {issuedBooks.map((book, index) => (
-              <tr key={book.id}>
+              <tr key={book.transaction_id || index}>
                 <td>{index + 1}</td>
-                <td>{book.name}</td>
-                <td>{book.issueDate}</td>
-                <td>{book.dueDate}</td>
+                <td>{book.book_name || book.name || "Unknown"}</td>
+                <td>{book.issue_date || book.issueDate}</td>
+                <td>{book.due_date || book.dueDate}</td>
               </tr>
             ))}
           </tbody>

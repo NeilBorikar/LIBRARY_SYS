@@ -2,21 +2,37 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Users, Lock, Mail, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
+import api from "../../api/axios";
 
 function StaffLogin() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [empId, setEmpId] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
     setIsLoading(true);
-    
-    // Simulate authentication delay
-    setTimeout(() => {
+
+    try {
+      const response = await api.post("/auth/login", {
+        role: "staff",
+        identifier: empId,
+        password: password
+      });
+      if (response.data.message === "Login successful") {
+        localStorage.setItem("userRole", "staff");
+        localStorage.setItem("userIdentifier", empId);
+        navigate("/staff/dashboard");
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Invalid credentials");
+    } finally {
       setIsLoading(false);
-      navigate("/staff/dashboard");
-    }, 1500);
+    }
   };
 
   const containerVariants = {
@@ -62,6 +78,11 @@ function StaffLogin() {
           variants={itemVariants}
         >
           <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">
+                {error}
+              </div>
+            )}
             {/* Email Field */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-secondary-700 flex items-center">
@@ -69,9 +90,11 @@ function StaffLogin() {
                 Employee ID / Email
               </label>
               <input
-                type="email"
-                placeholder="staff@college.edu"
+                type="text"
+                placeholder="staff_ID"
                 className="input-field"
+                value={empId}
+                onChange={(e) => setEmpId(e.target.value)}
                 required
               />
             </div>
@@ -87,6 +110,8 @@ function StaffLogin() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   className="input-field pr-12"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
                 <button
@@ -146,7 +171,7 @@ function StaffLogin() {
           <div className="mt-6 text-center">
             <p className="text-secondary-600">
               New Staff?{" "}
-              <span 
+              <span
                 onClick={() => navigate("/staff/register")}
                 className="text-primary-600 hover:text-primary-700 font-medium cursor-pointer transition-colors"
               >
