@@ -2,21 +2,37 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Shield, Lock, Mail, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
+import api from "../../api/axios";
 
 function AdminLogin() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
     setIsLoading(true);
-    
-    // Simulate authentication delay
-    setTimeout(() => {
+
+    try {
+      const response = await api.post("/auth/login", {
+        role: "admin",
+        identifier: email,
+        password: password
+      });
+      if (response.data.message === "Login successful") {
+        localStorage.setItem("userRole", "admin");
+        localStorage.setItem("userIdentifier", email);
+        navigate("/admin/dashboard");
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Invalid credentials");
+    } finally {
       setIsLoading(false);
-      navigate("/admin/dashboard");
-    }, 1500);
+    }
   };
 
   const containerVariants = {
@@ -62,6 +78,11 @@ function AdminLogin() {
           variants={itemVariants}
         >
           <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">
+                {error}
+              </div>
+            )}
             {/* Email Field */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-secondary-700 flex items-center">
@@ -72,6 +93,8 @@ function AdminLogin() {
                 type="email"
                 placeholder="admin@college.edu"
                 className="input-field"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -87,6 +110,8 @@ function AdminLogin() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   className="input-field pr-12"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
                 <button

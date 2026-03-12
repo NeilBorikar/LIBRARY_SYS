@@ -1,19 +1,31 @@
+import { useEffect, useState } from "react";
+import api from "../../api/axios";
+
 function StudentBooksReturned() {
-  // Dummy data for UI
-  const returnedBooks = [
-    {
-      id: 1,
-      name: "Computer Networks",
-      issueDate: "2025-12-20",
-      returnDate: "2026-01-05",
-    },
-    {
-      id: 2,
-      name: "Database Management Systems",
-      issueDate: "2025-11-10",
-      returnDate: "2025-11-25",
-    },
-  ];
+  const [returnedBooks, setReturnedBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const prn = localStorage.getItem("userIdentifier");
+        if (prn) {
+          const response = await api.get(`/student/books-returned?prn=${prn}`);
+          setReturnedBooks(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching returned books:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooks();
+  }, []);
+
+  if (loading) {
+    return <div className="p-8 text-center">Loading...</div>;
+  }
 
   return (
     <div className="student-books-page">
@@ -35,11 +47,11 @@ function StudentBooksReturned() {
 
           <tbody>
             {returnedBooks.map((book, index) => (
-              <tr key={book.id}>
+              <tr key={index}>
                 <td>{index + 1}</td>
-                <td>{book.name}</td>
-                <td>{book.issueDate}</td>
-                <td>{book.returnDate}</td>
+                <td>{book.book_name}</td>
+                <td>{new Date(book.issue_date).toLocaleDateString()}</td>
+                <td>{book.return_date ? new Date(book.return_date).toLocaleDateString() : "-"}</td>
                 <td className="status-returned">Returned</td>
               </tr>
             ))}

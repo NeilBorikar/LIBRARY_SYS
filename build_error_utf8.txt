@@ -1,0 +1,13 @@
+﻿
+> library-frontend@0.0.0 build
+> vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 2192 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mindex.html                 [39m[1m[2m  0.46 kB[22m[1m[22m[2m Γöé gzip:   0.30 kB[22m
+[2mdist/[22m[35massets/index-DfXSWR9E.css  [39m[1m[2m 49.83 kB[22m[1m[22m[2m Γöé gzip:   7.36 kB[22m
+[2mdist/[22m[36massets/index-DE3erhCg.js   [39m[1m[2m498.04 kB[22m[1m[22m[2m Γöé gzip: 145.70 kB[22m
+[32mΓ£ô built in 21.69s[39m

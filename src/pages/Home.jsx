@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { BookOpen, Users, UserCheck, GraduationCap, ArrowRight } from "lucide-react";
 
 function Home() {
@@ -66,14 +66,14 @@ function Home() {
 
   return (
     <div className="page-container flex items-center justify-center">
-      <motion.div
+      <Motion.div
         className="text-center max-w-6xl mx-auto px-4"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
         {/* Header Section */}
-        <motion.div
+        <Motion.div
           className="mb-16"
           variants={itemVariants}
         >
@@ -86,15 +86,15 @@ function Home() {
           <p className="text-lg text-secondary-500 max-w-2xl mx-auto">
             Streamlined library services for students, faculty, and staff
           </p>
-        </motion.div>
+        </Motion.div>
 
         {/* Role Selection Grid */}
-        <motion.div
+        <Motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
           variants={containerVariants}
         >
-          {roles.map((role, index) => (
-            <motion.div
+          {roles.map((role) => (
+            <Motion.div
               key={role.title}
               variants={itemVariants}
               whileHover={{ scale: 1.05 }}
@@ -129,16 +129,16 @@ function Home() {
                 {/* Glow Effect */}
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </button>
-            </motion.div>
+            </Motion.div>
           ))}
-        </motion.div>
+        </Motion.div>
 
         {/* Features Section */}
-        <motion.div
+        <Motion.div
           className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16"
           variants={containerVariants}
         >
-          <motion.div
+          <Motion.div
             className="card text-center"
             variants={itemVariants}
             whileHover={{ scale: 1.02 }}
@@ -148,9 +148,9 @@ function Home() {
             </div>
             <h3 className="text-xl font-semibold mb-2 text-secondary-800">Rich Collection</h3>
             <p className="text-secondary-600">Access thousands of books, journals, and digital resources</p>
-          </motion.div>
+          </Motion.div>
 
-          <motion.div
+          <Motion.div
             className="card text-center"
             variants={itemVariants}
             whileHover={{ scale: 1.02 }}
@@ -160,9 +160,9 @@ function Home() {
             </div>
             <h3 className="text-xl font-semibold mb-2 text-secondary-800">Easy Management</h3>
             <p className="text-secondary-600">Streamlined processes for book issuance and returns</p>
-          </motion.div>
+          </Motion.div>
 
-          <motion.div
+          <Motion.div
             className="card text-center"
             variants={itemVariants}
             whileHover={{ scale: 1.02 }}
@@ -172,19 +172,19 @@ function Home() {
             </div>
             <h3 className="text-xl font-semibold mb-2 text-secondary-800">Student Focused</h3>
             <p className="text-secondary-600">Designed with students' academic needs in mind</p>
-          </motion.div>
-        </motion.div>
+          </Motion.div>
+        </Motion.div>
 
         {/* Footer */}
-        <motion.div
+        <Motion.div
           className="mt-16 text-center text-secondary-500"
           variants={itemVariants}
         >
           <p className="text-sm">
             College Library Management System. Empowering education through knowledge.
           </p>
-        </motion.div>
-      </motion.div>
+        </Motion.div>
+      </Motion.div>
     </div>
   );
 }
