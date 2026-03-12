@@ -23,3 +23,7 @@ class StaffRepository(BaseRepository):
             {"_id": self.collection._id.__class__(staff_id)},
             {"security_deposit_paid": True}
         )
+
+    def get_by_id(self, staff_id: str):
+        """Get staff by ID"""
+        return self.find_by_id(staff_id)

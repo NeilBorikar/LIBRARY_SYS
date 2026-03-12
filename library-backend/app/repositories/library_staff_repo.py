@@ -12,3 +12,9 @@ class LibraryStaffRepository(BaseRepository):
         data["password"] = hash_password(data["password"])
         data["created_at"] = datetime.utcnow()
         return self.insert_one(data)
+
+    def get_by_id(self, staff_id: str):
+        """Get library staff by ID"""
+        if staff_id == "current":
+            return None  # Handle "current" as special case in route
+        return self.find_by_id(staff_id)

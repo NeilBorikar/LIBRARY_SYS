@@ -29,6 +29,10 @@ class StudentRepository(BaseRepository):
     def get_student_by_id(self, student_id: str) -> Optional[dict]:
         return self.find_by_id(student_id)
 
+    def get_by_id(self, student_id: str) -> Optional[dict]:
+        """Alias for get_student_by_id"""
+        return self.get_student_by_id(student_id)
+
     def update_student(self, student_id: str, update_data: dict) -> bool:
         update_data["updated_at"] = datetime.utcnow()
         return self.update_one(

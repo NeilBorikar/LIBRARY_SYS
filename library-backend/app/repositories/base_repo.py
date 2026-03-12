@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 from bson import ObjectId
 from pymongo.collection import Collection
+import asyncio
 
 
 class BaseRepository:
@@ -38,6 +39,31 @@ class BaseRepository:
     ) -> List[Dict[str, Any]]:
         cursor = self.collection.find(query).skip(skip).limit(limit)
         return list(cursor)
+
+    # -----------------------------
+    # ASYNC METHODS
+    # -----------------------------
+    async def async_find_one(self, query: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.find_one, query)
+
+    async def async_find_many(
+        self,
+        query: Dict[str, Any] = {},
+        limit: int = 100,
+        skip: int = 0
+    ) -> List[Dict[str, Any]]:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.find_many, query, limit, skip)
+
+    async def count_documents(self, query: Dict[str, Any]) -> int:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.collection.count_documents, query)
+
+    async def aggregate(self, pipeline: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        loop = asyncio.get_event_loop()
+        cursor = self.collection.aggregate(pipeline)
+        return await loop.run_in_executor(None, list, cursor)
 
     # -----------------------------
     # UPDATE
