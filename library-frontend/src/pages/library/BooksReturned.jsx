@@ -1,45 +1,22 @@
-<<<<<<< HEAD
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { RotateCcw, Users, Calendar, ArrowLeft, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import libraryOperations from '../../utils/libraryOperations';
+import api from '../../api/axios';
 
 function BooksReturned() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    userType: '',
-    userId: '',
-    bookName: '',
-    issueDate: '',
-    dueDate: '',
-    returnDate: new Date().toISOString().split('T')[0]
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-=======
-import { useState, useEffect } from "react";
-import api from "../../api/axios";
-
-function BooksReturned() {
-  const [formData, setFormData] = useState({
-    user_type: "",
-    user_id: "",
-    book_name: "",
-    issue_date: "",
-    return_date: ""
+    user_type: '',
+    user_id: '',
+    book_name: '',
+    issue_date: '',
+    due_date: '',
+    return_date: new Date().toISOString().split('T')[0]
   });
   const [returnedBooks, setReturnedBooks] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState('');
 
   const fetchReturnedBooks = async () => {
     try {
@@ -54,73 +31,47 @@ function BooksReturned() {
     fetchReturnedBooks();
   }, []);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
->>>>>>> e6d8db4533e4bd76b2850fb35827a25a589cf1bb
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-<<<<<<< HEAD
     setIsSubmitting(true);
     setMessage('');
 
     try {
-      // Simulate API call to return book
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Trigger real-time dashboard update
-      await libraryOperations.bookReturned(
-        {
-          title: formData.bookName,
-          id: Date.now().toString(),
-          dueDate: formData.dueDate
-        },
-        {
-          name: formData.userId, // In real app, would fetch user details
-          id: formData.userId,
-          department: formData.userType === 'student' ? 'Computer Science' : 'Engineering'
-        }
-      );
-
-      setMessage(`✅ Successfully returned "${formData.bookName}" from ${formData.userId}`);
+      await api.post("/library/return-book", {
+        user_type: formData.user_type,
+        user_id: formData.user_id,
+        book_name: formData.book_name,
+        issue_date: formData.issue_date,
+        due_date: formData.due_date,
+        return_date: formData.return_date
+      });
+      setMessage(`✅ Successfully returned "${formData.book_name}" from ${formData.user_id}`);
       
       // Reset form
       setFormData({
-        userType: '',
-        userId: '',
-        bookName: '',
-        issueDate: '',
-        dueDate: '',
-        returnDate: new Date().toISOString().split('T')[0]
+        user_type: '',
+        user_id: '',
+        book_name: '',
+        issue_date: '',
+        due_date: '',
+        return_date: new Date().toISOString().split('T')[0]
       });
+      
+      fetchReturnedBooks(); // refresh list
 
     } catch (error) {
       setMessage('❌ Error returning book. Please try again.');
       console.error('Error returning book:', error);
     } finally {
       setIsSubmitting(false);
-=======
-    setLoading(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      await api.post("/library/return-book", formData);
-      setSuccess("Book returned successfully!");
-      setFormData({
-        user_type: "",
-        user_id: "",
-        book_name: "",
-        issue_date: "",
-        return_date: ""
-      });
-      fetchReturnedBooks(); // refresh list
-    } catch (err) {
-      setError(err.response?.data?.detail || "Failed to return book");
-    } finally {
-      setLoading(false);
->>>>>>> e6d8db4533e4bd76b2850fb35827a25a589cf1bb
     }
   };
 
@@ -152,7 +103,6 @@ function BooksReturned() {
           </div>
         </div>
 
-<<<<<<< HEAD
         {/* Form */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -167,8 +117,8 @@ function BooksReturned() {
                 User Type *
               </label>
               <select
-                name="userType"
-                value={formData.userType}
+                name="user_type"
+                value={formData.user_type}
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -182,16 +132,16 @@ function BooksReturned() {
             {/* User ID */}
             <div>
               <label className="block text-sm font-medium text-secondary-700 mb-2">
-                {formData.userType === 'student' ? 'Student PRN' : 'Staff ID'} *
+                {formData.user_type === 'student' ? 'Student PRN' : 'Staff ID'} *
               </label>
               <input
                 type="text"
-                name="userId"
-                value={formData.userId}
+                name="user_id"
+                value={formData.user_id}
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder={formData.userType === 'student' ? 'Enter Student PRN' : 'Enter Staff ID'}
+                placeholder={formData.user_type === 'student' ? 'Enter Student PRN' : 'Enter Staff ID'}
               />
             </div>
 
@@ -202,8 +152,8 @@ function BooksReturned() {
               </label>
               <input
                 type="text"
-                name="bookName"
-                value={formData.bookName}
+                name="book_name"
+                value={formData.book_name}
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -218,49 +168,13 @@ function BooksReturned() {
               </label>
               <input
                 type="date"
-                name="issueDate"
-                value={formData.issueDate}
+                name="issue_date"
+                value={formData.issue_date}
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-=======
-      {error && <div className="p-3 bg-red-50 text-red-600 rounded-lg mb-4">{error}</div>}
-      {success && <div className="p-3 bg-green-50 text-green-600 rounded-lg mb-4">{success}</div>}
-
-      <form className="return-form" onSubmit={handleSubmit}>
-        {/* User Type */}
-        <select name="user_type" value={formData.user_type} onChange={handleChange} required>
-          <option value="">Select User Type</option>
-          <option value="student">Student</option>
-          <option value="staff">College Staff</option>
-        </select>
-
-        {/* User ID */}
-        <input
-          type="text"
-          name="user_id"
-          placeholder="Student PRN / Staff ID"
-          value={formData.user_id}
-          onChange={handleChange}
-          required
-        />
-
-        {/* Book Name */}
-        <input
-          type="text"
-          name="book_name"
-          placeholder="Book Name"
-          value={formData.book_name}
-          onChange={handleChange}
-          required
-        />
-
-        {/* Issue Date */}
-        <label>Issue Date</label>
-        <input type="date" name="issue_date" value={formData.issue_date} onChange={handleChange} required />
->>>>>>> e6d8db4533e4bd76b2850fb35827a25a589cf1bb
 
             {/* Due Date */}
             <div>
@@ -269,15 +183,14 @@ function BooksReturned() {
               </label>
               <input
                 type="date"
-                name="dueDate"
-                value={formData.dueDate}
+                name="due_date"
+                value={formData.due_date}
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
-<<<<<<< HEAD
             {/* Return Date */}
             <div>
               <label className="block text-sm font-medium text-secondary-700 mb-2">
@@ -285,11 +198,11 @@ function BooksReturned() {
               </label>
               <input
                 type="date"
-                name="returnDate"
-                value={formData.returnDate}
+                name="return_date"
+                value={formData.return_date}
                 onChange={handleInputChange}
                 required
-                min={formData.dueDate}
+                min={formData.due_date}
                 className="w-full px-4 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -329,49 +242,51 @@ function BooksReturned() {
             </motion.div>
           )}
         </motion.div>
+
+        {/* Returned Books Table */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-xl p-6 shadow-lg mt-6"
+        >
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Returned Books Records</h3>
+          {returnedBooks.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">No books returned yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">User Type</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">User ID</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Book Name</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Issue Date</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Return Date</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {returnedBooks.map((book, idx) => (
+                    <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4 capitalize">{book.user_type}</td>
+                      <td className="py-3 px-4">{book.user_id}</td>
+                      <td className="py-3 px-4">{book.book_name}</td>
+                      <td className="py-3 px-4">{book.issue_date}</td>
+                      <td className="py-3 px-4">{book.return_date}</td>
+                      <td className="py-3 px-4">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          Returned
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </motion.div>
       </motion.div>
-=======
-        {/* Return Date */}
-        <label>Return Date</label>
-        <input type="date" name="return_date" value={formData.return_date} onChange={handleChange} required />
-
-        <button type="submit" disabled={loading}>
-          {loading ? "Marking..." : "Mark as Returned"}
-        </button>
-      </form>
-
-      <div className="mt-8">
-        <h3 className="text-xl font-bold mb-4">Returned Books Records</h3>
-        {returnedBooks.length === 0 ? (
-          <p>No books returned yet.</p>
-        ) : (
-          <table className="staff-books-table w-full">
-            <thead>
-              <tr>
-                <th>User Type</th>
-                <th>User ID</th>
-                <th>Book Name</th>
-                <th>Issue Date</th>
-                <th>Return Date</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {returnedBooks.map((book, idx) => (
-                <tr key={idx}>
-                  <td className="capitalize">{book.user_type}</td>
-                  <td>{book.user_id}</td>
-                  <td>{book.book_name}</td>
-                  <td>{book.issue_date}</td>
-                  <td>{book.return_date}</td>
-                  <td className="status-returned">Returned</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
->>>>>>> e6d8db4533e4bd76b2850fb35827a25a589cf1bb
     </div>
   );
 }
