@@ -1,14 +1,52 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Users, LogOut, ArrowLeft, BookMarked, RotateCcw, DollarSign, ShieldCheck, CreditCard } from "lucide-react";
+import api from "../../api/axios";
 
 function StaffDashboard() {
   const navigate = useNavigate();
-  
-  // TEMP: frontend-only state
-  const isDepositPaid = false; // later comes from backend
+  const [stats, setStats] = useState({ is_deposit_paid: false, total_books_issued: 0, total_books_returned: 0 });
+  const [empId, setEmpId] = useState("Staff");
+  const [isProcessingDeposit, setIsProcessingDeposit] = useState(false);
+  const isDepositPaid = stats.is_deposit_paid;
+
+  useEffect(() => {
+    const id = localStorage.getItem("userIdentifier");
+    if (id) {
+      setEmpId(id);
+      fetchDashboardData(id);
+    }
+  }, []);
+
+  const fetchDashboardData = async (id) => {
+    try {
+      const response = await api.get(`/staff/dashboard?emp_id=${id}`);
+      setStats(response.data);
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error);
+    }
+  };
+
+  const handleDepositPay = async () => {
+    setIsProcessingDeposit(true);
+    try {
+      await api.post(`/staff/deposit?emp_id=${empId}`, {
+        amount: 1000,
+        payment_mode: "online"
+      });
+      // Refresh the dashboard to show deposit paid
+      await fetchDashboardData(empId);
+    } catch (error) {
+      console.error("Failed to pay deposit:", error);
+      alert(error.response?.data?.detail || "Deposit payment failed");
+    } finally {
+      setIsProcessingDeposit(false);
+    }
+  };
 
   const handleLogout = () => {
+    localStorage.clear();
     navigate("/");
   };
 
@@ -73,10 +111,10 @@ function StaffDashboard() {
               </div>
               <div>
                 <h1 className="text-xl font-bold">College Staff Dashboard</h1>
-                <p className="text-green-100 text-sm">Logged in as: <span className="font-medium">College Staff</span></p>
+                <p className="text-green-100 text-sm">Logged in as: <span className="font-medium">{empId}</span></p>
               </div>
             </motion.div>
-            
+
             <motion.div variants={itemVariants} className="flex items-center space-x-3">
               <button className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
                 <ArrowLeft className="w-5 h-5" />
@@ -108,11 +146,10 @@ function StaffDashboard() {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  isDepositPaid 
-                    ? 'bg-green-100' 
-                    : 'bg-red-100'
-                }`}>
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDepositPaid
+                  ? 'bg-green-100'
+                  : 'bg-red-100'
+                  }`}>
                   {isDepositPaid ? (
                     <ShieldCheck className="w-5 h-5 text-green-600" />
                   ) : (
@@ -121,11 +158,10 @@ function StaffDashboard() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-secondary-800">Security Deposit Status</h3>
-                  <p className={`text-sm font-medium ${
-                    isDepositPaid 
-                      ? 'text-green-600' 
-                      : 'text-red-600'
-                  }`}>
+                  <p className={`text-sm font-medium ${isDepositPaid
+                    ? 'text-green-600'
+                    : 'text-red-600'
+                    }`}>
                     {isDepositPaid ? '₹1000 Deposit Paid ✅' : '₹1000 Deposit Not Paid ❌'}
                   </p>
                 </div>
@@ -135,7 +171,7 @@ function StaffDashboard() {
 
           {/* Menu Items */}
           <div className="space-y-4">
-            {menuItems.map((item, index) => (
+            {menuItems.map((item) => (
               <motion.button
                 key={item.title}
                 onClick={() => navigate(item.route)}
@@ -161,13 +197,19 @@ function StaffDashboard() {
             {/* Pay Deposit Button */}
             {!isDepositPaid && (
               <motion.button
-                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-large hover:shadow-2xl flex items-center justify-center"
+                onClick={handleDepositPay}
+                disabled={isProcessingDeposit}
+                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-large hover:shadow-2xl flex items-center justify-center disabled:opacity-50"
                 variants={itemVariants}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: isProcessingDeposit ? 1 : 1.02 }}
+                whileTap={{ scale: isProcessingDeposit ? 1 : 0.98 }}
               >
-                <CreditCard className="w-5 h-5 mr-2" />
-                Pay Security Deposit
+                {isProcessingDeposit ? "Processing..." : (
+                  <>
+                    <CreditCard className="w-5 h-5 mr-2" />
+                    Pay Security Deposit
+                  </>
+                )}
               </motion.button>
             )}
           </div>

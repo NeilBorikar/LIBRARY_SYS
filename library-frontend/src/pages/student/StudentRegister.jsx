@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { GraduationCap, Lock, Mail, Phone, BookOpen, ArrowRight, Eye, EyeOff } from "lucide-react";
+import api from "../../api/axios";
 
 function StudentRegister() {
   const navigate = useNavigate();
@@ -53,12 +54,27 @@ function StudentRegister() {
 
     setIsLoading(true);
     setError("");
-    
-    // Simulate registration delay
-    setTimeout(() => {
-      setIsLoading(false);
+
+    try {
+      const payload = {
+        prn: formData.prn,
+        email: formData.email,
+        branch: formData.branch,
+        mobile: formData.mobile,
+        password: formData.password,
+        name: formData.email.split("@")[0], // Derive name from email part before @
+      };
+
+      await api.post("/student/register", payload);
+
+      // Navigate to login on success
       navigate("/student/login");
-    }, 1500);
+    } catch (err) {
+      console.error("Registration failed:", err);
+      setError(err.response?.data?.detail || "Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const containerVariants = {
@@ -270,7 +286,7 @@ function StudentRegister() {
           <div className="mt-6 text-center">
             <p className="text-secondary-600">
               Already have an account?{" "}
-              <span 
+              <span
                 onClick={() => navigate("/student/login")}
                 className="text-primary-600 hover:text-primary-700 font-medium cursor-pointer transition-colors"
               >

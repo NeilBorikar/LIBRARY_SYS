@@ -1,33 +1,42 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException
+from typing import List
+
 from app.repositories.student_repo import StudentRepository
-from app.models.student import StudentCreate, StudentResponse
+from app.models.student import (
+    StudentRegister,
+    StudentDashboardResponse,
+    StudentBookResponse,
+    StudentFineResponse
+)
 
-router = APIRouter(prefix="/students", tags=["Students"])
-
+router = APIRouter()
 student_repo = StudentRepository()
 
 
-@router.post("/register", response_model=StudentResponse)
-def register_student(student: StudentCreate):
+@router.post("/register")
+def register_student(data: StudentRegister):
     try:
-        student_id = student_repo.create_student(student.dict())
-        created_student = student_repo.get_student_by_id(student_id)
-        created_student["id"] = str(created_student["_id"])
-        return created_student
+        student_repo.create_student(data.dict())
+        return {"message": "Student registered successfully"}
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/{student_id}", response_model=StudentResponse)
-def get_student(student_id: str):
-    student = student_repo.get_student_by_id(student_id)
-    if not student:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Student not found"
-        )
-    student["id"] = str(student["_id"])
-    return student
+@router.get("/dashboard", response_model=StudentDashboardResponse)
+def student_dashboard(prn: str):
+    return student_repo.get_dashboard_data(prn)
+
+
+@router.get("/books-issued", response_model=List[StudentBookResponse])
+def books_issued(prn: str):
+    return student_repo.get_issued_books(prn)
+
+
+@router.get("/books-returned", response_model=List[StudentBookResponse])
+def books_returned(prn: str):
+    return student_repo.get_returned_books(prn)
+
+
+@router.get("/fine-paid", response_model=List[StudentFineResponse])
+def fine_history(prn: str):
+    return student_repo.get_fine_history(prn)

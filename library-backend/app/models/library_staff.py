@@ -1,20 +1,40 @@
 from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
 from datetime import datetime
 
 
-class LibraryStaffBase(BaseModel):
+# ---------- REQUEST ----------
+
+class LibraryStaffRegister(BaseModel):
+    staff_id: str
     name: str
-    employee_id: str
     email: EmailStr
-
-
-class LibraryStaffCreate(LibraryStaffBase):
     password: str = Field(..., min_length=6)
 
 
-class LibraryStaffResponse(LibraryStaffBase):
-    id: str
-    created_at: datetime
+class LibraryStaffLogin(BaseModel):
+    identifier: str  # email or staff_id
+    password: str
 
-    class Config:
-        from_attributes = True
+
+class IssueBookRequest(BaseModel):
+    user_type: str  # "student" | "staff"
+    user_id: str
+    book_id: str
+    issue_date: datetime
+    due_date: datetime
+
+
+class ReturnBookRequest(BaseModel):
+    user_type: str
+    user_id: str
+    book_id: str
+    return_date: datetime
+
+
+class CollectFineRequest(BaseModel):
+    user_type: str
+    user_id: str
+    book_id: str
+    amount: int
+    payment_mode: str

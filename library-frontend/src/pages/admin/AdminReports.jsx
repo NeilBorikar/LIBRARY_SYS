@@ -1,16 +1,31 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, BarChart3, Download, Calendar, TrendingUp, BookOpen, Users, UserCheck } from "lucide-react";
+import api from "../../api/axios";
 
 function AdminReports() {
   const navigate = useNavigate();
+  const [reportData, setReportData] = useState(null);
 
-  // Sample data
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await api.get("/admin/reports");
+        setReportData(response.data);
+      } catch (error) {
+        console.error("Failed to fetch admin reports:", error);
+      }
+    };
+    fetchReports();
+  }, []);
+
+  // Use state data or fallback to 0
   const reportStats = [
-    { title: "Total Books Issued", value: "1,234", change: "+18.7%", icon: <BookOpen className="w-5 h-5" />, color: "from-blue-500 to-blue-600" },
-    { title: "Active Students", value: "3,847", change: "+8.2%", icon: <Users className="w-5 h-5" />, color: "from-green-500 to-green-600" },
-    { title: "Library Staff", value: "24", change: "+2", icon: <UserCheck className="w-5 h-5" />, color: "from-purple-500 to-purple-600" },
-    { title: "College Staff", value: "156", change: "+12", icon: <Users className="w-5 h-5" />, color: "from-orange-500 to-orange-600" },
+    { title: "Total Books Issued", value: reportData?.total_books_issued || 0, change: "+0%", icon: <BookOpen className="w-5 h-5" />, color: "from-blue-500 to-blue-600" },
+    { title: "Total Books Returned", value: reportData?.total_books_returned || 0, change: "+0%", icon: <Users className="w-5 h-5" />, color: "from-green-500 to-green-600" },
+    { title: "Fines Collected", value: `₹${reportData?.total_fine_collected || 0}`, change: "+0%", icon: <UserCheck className="w-5 h-5" />, color: "from-purple-500 to-purple-600" },
+    { title: "Active Issues", value: reportData?.total_books_issued - reportData?.total_books_returned || 0, change: "+0", icon: <Users className="w-5 h-5" />, color: "from-orange-500 to-orange-600" },
   ];
 
   const recentReports = [
@@ -66,7 +81,7 @@ function AdminReports() {
                 <p className="text-secondary-600">View comprehensive reports and system insights</p>
               </div>
             </motion.div>
-            
+
             <motion.div variants={itemVariants}>
               <button className="flex items-center space-x-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors">
                 <Download className="w-4 h-4" />
@@ -169,11 +184,10 @@ function AdminReports() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                      report.status === 'Generated' 
-                        ? 'bg-green-100 text-green-800' 
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${report.status === 'Generated'
+                        ? 'bg-green-100 text-green-800'
                         : 'bg-yellow-100 text-yellow-800'
-                    }`}>
+                      }`}>
                       {report.status}
                     </span>
                     <button className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors">

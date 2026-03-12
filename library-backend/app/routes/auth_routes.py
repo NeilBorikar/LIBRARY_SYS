@@ -1,36 +1,25 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException
+
 from app.repositories.auth_repo import AuthRepository
-from app.utils.password import verify_password
-from app.utils.jwt import create_access_token
+from app.models.student import StudentLogin
+from app.models.staff import StaffLogin
+from app.models.library_staff import LibraryStaffLogin
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
-
+router = APIRouter()
 auth_repo = AuthRepository()
 
 
 @router.post("/login")
-def login(role: str, email: str, password: str):
-    user = auth_repo.get_user_by_email(role, email)
+def login(data: dict):
+    role = data.get("role")
+    identifier = data.get("identifier")
+    password = data.get("password")
 
+    user = auth_repo.authenticate(role, identifier, password)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials"
-        )
-
-    if not verify_password(password, user["password"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials"
-        )
-
-    token = create_access_token({
-        "user_id": str(user["_id"]),
-        "role": role
-    })
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     return {
-        "access_token": token,
-        "token_type": "bearer",
+        "message": "Login successful",
         "role": role
     }

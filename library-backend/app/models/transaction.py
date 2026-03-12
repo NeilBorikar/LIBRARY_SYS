@@ -1,24 +1,27 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
 
 
-class TransactionBase(BaseModel):
+class IssueTransactionResponse(BaseModel):
+    user_type: str
     user_id: str
-    user_role: str   # student / staff
     book_id: str
-    issued_at: datetime
+    issue_date: datetime
     due_date: datetime
-    returned_at: Optional[datetime] = None
-    fine_amount: float = 0.0
+    status: str
 
 
-class TransactionCreate(TransactionBase):
-    pass
+class ReturnTransactionResponse(BaseModel):
+    user_type: str
+    user_id: str
+    book_id: str
+    return_date: datetime
 
 
-class TransactionResponse(TransactionBase):
-    id: str
-
-    class Config:
-        from_attributes = True
+class FineTransactionResponse(BaseModel):
+    user_type: str
+    user_id: str
+    book_id: str
+    amount: int
+    payment_mode: str
+    paid_at: datetime

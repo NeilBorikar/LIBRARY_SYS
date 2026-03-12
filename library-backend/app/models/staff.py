@@ -1,25 +1,31 @@
 from pydantic import BaseModel, EmailStr, Field
-from datetime import datetime
 from typing import Optional
+from datetime import datetime
 
 
-class StaffBase(BaseModel):
+# ---------- REQUEST ----------
+
+class StaffRegister(BaseModel):
+    emp_id: str
     name: str
-    staff_id: str
     email: EmailStr
     department: str
-    mobile: str = Field(..., min_length=10, max_length=10)
-
-
-class StaffCreate(StaffBase):
     password: str = Field(..., min_length=6)
-    security_deposit_paid: bool = False
 
 
-class StaffResponse(StaffBase):
-    id: str
-    security_deposit_paid: bool
-    created_at: datetime
+class StaffLogin(BaseModel):
+    identifier: str  # email or emp_id
+    password: str
 
-    class Config:
-        from_attributes = True
+
+class StaffDepositRequest(BaseModel):
+    amount: int = Field(..., gt=0)
+    payment_mode: str
+
+
+# ---------- RESPONSE ----------
+
+class StaffDashboardResponse(BaseModel):
+    active_issues: int
+    deposit_status: str
+    deposit_details: Optional[dict] = None

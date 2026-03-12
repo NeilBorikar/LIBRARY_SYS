@@ -1,21 +1,31 @@
+import { useEffect, useState } from "react";
+import api from "../../api/axios";
+
 function StudentFinePaid() {
-  // Dummy data for UI
-  const fineHistory = [
-    {
-      id: 1,
-      bookName: "Operating Systems",
-      amount: 50,
-      paymentDate: "2026-01-12",
-      paymentMode: "Cash",
-    },
-    {
-      id: 2,
-      bookName: "Database Management Systems",
-      amount: 30,
-      paymentDate: "2025-12-05",
-      paymentMode: "UPI",
-    },
-  ];
+  const [fineHistory, setFineHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFines = async () => {
+      try {
+        const prn = localStorage.getItem("userIdentifier");
+        if (prn) {
+          const response = await api.get(`/student/fine-paid?prn=${prn}`);
+          setFineHistory(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching fine history:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFines();
+  }, []);
+
+  if (loading) {
+    return <div className="p-8 text-center">Loading...</div>;
+  }
 
   return (
     <div className="student-books-page">
@@ -38,12 +48,12 @@ function StudentFinePaid() {
 
           <tbody>
             {fineHistory.map((fine, index) => (
-              <tr key={fine.id}>
+              <tr key={index}>
                 <td>{index + 1}</td>
-                <td>{fine.bookName}</td>
+                <td>{fine.book_name}</td>
                 <td>{fine.amount}</td>
-                <td>{fine.paymentDate}</td>
-                <td>{fine.paymentMode}</td>
+                <td>{new Date(fine.paid_at).toLocaleDateString()}</td>
+                <td>{fine.payment_mode}</td>
                 <td className="status-paid">Paid</td>
               </tr>
             ))}
