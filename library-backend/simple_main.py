@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes.library_staff_routes import router as library_router
 from app.routes.dashboard_routes import router as dashboard_router
 from app.routes.admin_routes import router as admin_router
+from app.routes.auth_routes import router as auth_router
 
 # Create FastAPI app instance
 app = FastAPI(
@@ -30,6 +31,7 @@ app.add_middleware(
 app.include_router(library_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
 
 # -----------------------------
 # HEALTH CHECK ROUTE
@@ -43,7 +45,8 @@ def health_check():
         "endpoints": {
             "library": "/api/library/*",
             "dashboard": "/api/dashboard/*",
-            "admin": "/api/admin/*"
+            "admin": "/api/admin/*",
+            "auth": "/api/auth/*"
         }
     }
 
@@ -65,4 +68,4 @@ def test_dashboard():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8003)
+    uvicorn.run(app, host="0.0.0.0", port=8004)

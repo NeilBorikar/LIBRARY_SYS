@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Create base axios instance
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8003', // Updated to match backend port 8003
+  baseURL: 'http://localhost:8004', // Updated to match backend port 8004
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
