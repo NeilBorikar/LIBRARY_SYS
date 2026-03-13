@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Plus, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import libraryOperations from '../../utils/libraryOperations';
+import libraryService from '../../services/libraryService';
 
 function AddBook() {
   const navigate = useNavigate();
