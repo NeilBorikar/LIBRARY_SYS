@@ -23,6 +23,7 @@ admin_collection = db.admin
 issues_collection = db.issues
 returns_collection = db.returns
 fines_collection = db.fines
+admins_collection = db.admins  # Added missing collection
 
 # -----------------------------
 # CONNECTION TEST
