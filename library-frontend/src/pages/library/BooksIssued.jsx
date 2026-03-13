@@ -31,9 +31,14 @@ function BooksIssued() {
   const fetchIssuedBooks = async () => {
     try {
       const response = await api.get("/library/books-issued");
-      setIssuedBooks(response.data);
+      if (response.data && response.data.books) {
+        setIssuedBooks(response.data.books);
+      } else {
+        setIssuedBooks([]);
+      }
     } catch (err) {
       console.error("Error fetching issued books:", err);
+      setIssuedBooks([]); 
     }
   };
 

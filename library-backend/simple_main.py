@@ -2,10 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import all routes
-from app.routes.library_staff_routes import router as library_router
+from app.routes.library_staff_routes_new import router as library_router
 from app.routes.dashboard_routes import router as dashboard_router
 from app.routes.admin_routes import router as admin_router
 from app.routes.auth_routes import router as auth_router
+
+# Import database utilities
+from app.database_utils import initialize_database
 
 # Create FastAPI app instance
 app = FastAPI(
@@ -68,4 +71,11 @@ def test_dashboard():
 
 if __name__ == "__main__":
     import uvicorn
+    
+    # Initialize database
+    if initialize_database():
+        print("✅ Database initialized successfully")
+    else:
+        print("❌ Database initialization failed")
+    
     uvicorn.run(app, host="0.0.0.0", port=8004)

@@ -101,7 +101,10 @@ function Home() {
               whileTap={{ scale: 0.95 }}
             >
               <button
-                onClick={() => navigate(role.route)}
+                onClick={() => {
+                  console.log(`Navigating to: ${role.route}`);
+                  navigate(role.route);
+                }}
                 className={`
                   relative w-full p-8 rounded-2xl bg-gradient-to-br ${role.color} ${role.hoverColor}
                   text-white shadow-large hover:shadow-2xl transition-all duration-300

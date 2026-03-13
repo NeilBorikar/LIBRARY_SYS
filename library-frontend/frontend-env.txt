@@ -1,0 +1,30 @@
+# Library Management System - Frontend Environment Configuration
+
+# API Configuration
+VITE_API_BASE_URL=http://localhost:8004/api
+
+# Application Configuration
+VITE_APP_NAME=Library Management System
+VITE_APP_VERSION=1.0.0
+
+# Development Configuration
+VITE_DEV_MODE=true
+VITE_DEBUG_MODE=true
+
+# Test Credentials (for development only)
+VITE_TEST_ADMIN=admin@college.edu
+VITE_TEST_ADMIN_PASSWORD=admin123
+VITE_TEST_STAFF=staff@college.com
+VITE_TEST_STAFF_PASSWORD=staff123
+VITE_TEST_LIBRARY_STAFF=library@college.edu
+VITE_TEST_LIBRARY_STAFF_PASSWORD=library123
+VITE_TEST_STUDENT=student@college.edu
+VITE_TEST_STUDENT_PASSWORD=student123
+
+# Backend Configuration
+VITE_BACKEND_HOST=localhost
+VITE_BACKEND_PORT=8004
+
+# Frontend Configuration
+VITE_FRONTEND_HOST=localhost
+VITE_FRONTEND_PORT=5174

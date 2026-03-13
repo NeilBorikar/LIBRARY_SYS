@@ -7,36 +7,23 @@ from app.routes.student_routes import router as student_router
 from app.routes.library_staff_routes import router as library_staff_router
 from app.routes.staff_routes import router as staff_router
 from app.routes.admin_routes import router as admin_router
-from app.utils.scheduler import library_scheduler
+from app.routes.reminder_routes import router as reminder_router
+from app.services.reminder_scheduler import reminder_scheduler
+from app.config import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    library_scheduler.start()
+    reminder_scheduler.start()
     yield
     # Shutdown
-    library_scheduler.stop()
-
-from app.config import settings
-
-# ROUTES
-from app.routes.auth_routes import router as auth_router
-from app.routes.student_routes import router as student_router
-from app.routes.staff_routes import router as staff_router
-from app.routes.library_staff_routes import router as library_router
-from app.routes.admin_routes import router as admin_router
-
+    reminder_scheduler.stop()
 
 app = FastAPI(
-<<<<<<< HEAD
     title="Library Management System",
     description="Backend API for College Library Management System",
     version="1.0.0",
     lifespan=lifespan
-=======
-    title=settings.APP_NAME,
-    version="1.0.0"
->>>>>>> e6d8db4533e4bd76b2850fb35827a25a589cf1bb
 )
 
 # -----------------------------
@@ -53,11 +40,13 @@ app.add_middleware(
 # -----------------------------
 # ROUTE REGISTRATION
 # -----------------------------
-app.include_router(auth_router, prefix="/auth", tags=["Auth"])
-app.include_router(student_router, prefix="/student", tags=["Student"])
-app.include_router(staff_router, prefix="/staff", tags=["Staff"])
-app.include_router(library_router, prefix="/library", tags=["Library"])
-app.include_router(admin_router, prefix="/admin", tags=["Admin"])
+app.include_router(dashboard_router, tags=["Dashboard"])
+app.include_router(auth_router, tags=["Auth"])
+app.include_router(student_router, tags=["Student"])
+app.include_router(staff_router, tags=["Staff"])
+app.include_router(library_staff_router, tags=["Library"])
+app.include_router(admin_router, tags=["Admin"])
+app.include_router(reminder_router, tags=["Reminders"])
 
 # -----------------------------
 # HEALTH CHECK
@@ -68,13 +57,3 @@ def health_check():
         "status": "OK",
         "message": "Library Management System API is running"
     }
-
-# -----------------------------
-# INCLUDE ALL ROUTES
-# -----------------------------
-app.include_router(dashboard_router)
-app.include_router(auth_router)
-app.include_router(student_router)
-app.include_router(library_staff_router)
-app.include_router(staff_router)
-app.include_router(admin_router)

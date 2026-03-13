@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { BookOpen, Lock, Mail, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import api from "../../api/axios";
+import { authAPI } from "../../api/api";
 
 const LibraryLogin = () => {
   const navigate = useNavigate();
@@ -18,18 +18,19 @@ const LibraryLogin = () => {
     setIsLoading(true);
 
     try {
-      const response = await api.post("/auth/login", {
+      const response = await authAPI.login({
         role: "library_staff",
         identifier: email,
         password: password
       });
-      if (response.data.message === "Login successful") {
+      if (response.message === "Login successful") {
         localStorage.setItem("userRole", "library_staff");
         localStorage.setItem("userIdentifier", email);
+        localStorage.setItem("authToken", response.token);
         navigate("/library/dashboard");
       }
     } catch (err) {
-      setError(err.response?.data?.detail || "Invalid credentials");
+      setError(err.message || "Invalid credentials");
     } finally {
       setIsLoading(false);
     }

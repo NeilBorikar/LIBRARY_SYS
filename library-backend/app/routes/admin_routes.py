@@ -4,7 +4,7 @@ from datetime import date
 from app.repositories.admin_repo import AdminRepository
 from app.models.admin import AdminDashboardMetrics, AdminDailyReport, AdminRegister
 
-router = APIRouter()
+router = APIRouter(prefix="/admin", tags=["Admin"])
 admin_repo = AdminRepository()
 
 @router.post("/register")

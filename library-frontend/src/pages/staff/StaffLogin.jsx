@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Users, Lock, Mail, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import api from "../../api/axios";
+import { authAPI } from "../../api/api";
 
 function StaffLogin() {
   const navigate = useNavigate();
@@ -18,18 +18,19 @@ function StaffLogin() {
     setIsLoading(true);
 
     try {
-      const response = await api.post("/auth/login", {
+      const response = await authAPI.login({
         role: "staff",
         identifier: empId,
         password: password
       });
-      if (response.data.message === "Login successful") {
+      if (response.message === "Login successful") {
         localStorage.setItem("userRole", "staff");
         localStorage.setItem("userIdentifier", empId);
+        localStorage.setItem("authToken", response.token);
         navigate("/staff/dashboard");
       }
     } catch (err) {
-      setError(err.response?.data?.detail || "Invalid credentials");
+      setError(err.message || "Invalid credentials");
     } finally {
       setIsLoading(false);
     }

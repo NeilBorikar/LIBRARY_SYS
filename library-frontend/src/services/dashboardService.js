@@ -1,9 +1,9 @@
 // Dashboard Service - Core business logic for dashboard data management
-import apiClient from './apiService';
+import apiClient from '../api/apiService';
 
 class DashboardService {
   constructor() {
-    this.baseURL = 'http://localhost:8000';
+    this.baseURL = 'http://localhost:8004';
     this.subscribers = [];
     this.pollingInterval = null;
     this.cache = new Map();
@@ -22,10 +22,43 @@ class DashboardService {
     this.subscribers.forEach(callback => callback(data));
   }
 
+  // Get library dashboard data (specific function for library staff)
+  async getLibraryDashboardData() {
+    try {
+      const response = await apiClient.get('/api/dashboard/library');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching library dashboard data:', error);
+      return this.getMockData('library');
+    }
+  }
+
+  // Get student dashboard data
+  async getStudentDashboardData(studentPrn) {
+    try {
+      const response = await apiClient.get(`/api/dashboard/student/${studentPrn}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching student dashboard data:', error);
+      return this.getMockData('student');
+    }
+  }
+
+  // Get college dashboard data
+  async getCollegeDashboardData() {
+    try {
+      const response = await apiClient.get('/api/dashboard/college');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching college dashboard data:', error);
+      return this.getMockData('college');
+    }
+  }
+
   // Fetch dashboard data for specific role
   async fetchDashboardData(role) {
     try {
-      const response = await apiClient.get(`/dashboard/${role}`);
+      const response = await apiClient.get(`/api/dashboard/${role}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching ${role} dashboard data:`, error);
@@ -36,7 +69,7 @@ class DashboardService {
   // Fetch global statistics
   async fetchGlobalStats() {
     try {
-      const response = await apiClient.get('/dashboard/global-stats');
+      const response = await apiClient.get('/api/dashboard/global-stats');
       return response.data;
     } catch (error) {
       console.error('Error fetching global stats:', error);
@@ -44,7 +77,18 @@ class DashboardService {
     }
   }
 
-  // Trigger manual refresh
+  // Send manual reminder to student
+  async sendManualReminder(studentPrn) {
+    try {
+      const response = await apiClient.post('/api/dashboard/send-reminder', {
+        student_prn: studentPrn
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error sending reminder:', error);
+      throw new Error('Failed to send reminder');
+    }
+  }
   async triggerRefresh() {
     try {
       // Clear cache to force fresh data

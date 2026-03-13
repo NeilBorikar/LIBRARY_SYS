@@ -2,13 +2,16 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { GraduationCap, Lock, Mail, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import api from "../../api/axios";
+import { authAPI } from "../../api/api";
 
 function StudentLogin() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,20 +20,21 @@ function StudentLogin() {
 
     try {
       // API call to login
-      const response = await api.post("/auth/login", {
+      const response = await authAPI.login({
         role: "student",
-        identifier: e.target[0].value, // Email/PRN input
-        password: e.target[1].value,   // Password input
+        identifier: email,
+        password: password,
       });
 
-      if (response.data.message === "Login successful") {
-        localStorage.setItem("role", response.data.role);
-        localStorage.setItem("userIdentifier", e.target[0].value);
+      if (response.message === "Login successful") {
+        localStorage.setItem("role", response.user.role);
+        localStorage.setItem("userIdentifier", email);
+        localStorage.setItem("authToken", response.token);
         navigate("/student/dashboard");
       }
     } catch (err) {
       console.error("Login failed:", err);
-      setError(err.response?.data?.detail || "Login failed. Please check your credentials.");
+      setError(err.message || "Login failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
@@ -94,6 +98,8 @@ function StudentLogin() {
                 type="email"
                 placeholder="student@college.edu"
                 className="input-field"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -109,6 +115,8 @@ function StudentLogin() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   className="input-field pr-12"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
                 <button
