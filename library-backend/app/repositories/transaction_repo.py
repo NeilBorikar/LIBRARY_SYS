@@ -1,310 +1,181 @@
-<<<<<<< HEAD
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-from app.database import transactions_collection
-from app.repositories.base_repo import BaseRepository
-=======
-from datetime import datetime
-from typing import List, Optional
+from bson import ObjectId
 
 from app.database import (
     issues_collection,
     returns_collection,
     fines_collection,
-    deposits_collection
+    transactions_collection
 )
->>>>>>> e6d8db4533e4bd76b2850fb35827a25a589cf1bb
+from app.repositories.base_repo import BaseRepository
 
 
-class TransactionRepository:
+class TransactionRepository(BaseRepository):
     """
-    Read-only transaction repository.
-    Used for analytics, audit, and admin views.
-    NO write-side business logic lives here.
+    Transaction repository for managing book issues, returns, and fines
     """
 
-<<<<<<< HEAD
-    def log_transaction(self, data: dict) -> str:
-        data["timestamp"] = datetime.utcnow()
-        return self.insert_one(data)
-    
-    async def get_current_books(self, user_id: str) -> List[Dict[str, Any]]:
-        """Get currently borrowed books for a user"""
+    def __init__(self):
+        super().__init__(transactions_collection)
+
+    # -------------------------
+    # CREATE TRANSACTION
+    # -------------------------
+    def create_transaction(self, data: dict) -> dict:
+        """Create a new transaction record"""
+        transaction = {
+            "transaction_id": str(ObjectId()),
+            "user_type": data["user_type"],
+            "user_id": data["user_id"],
+            "book_id": data.get("book_id"),
+            "book_name": data["book_name"],
+            "issue_date": data["issue_date"],
+            "due_date": data["due_date"],
+            "return_date": data.get("return_date"),
+            "fine_amount": data.get("fine_amount"),
+            "status": data["status"],
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+
+        result = self.insert_one(transaction)
+        transaction["_id"] = result
+        return transaction
+
+    # -------------------------
+    # UPDATE TRANSACTION
+    # -------------------------
+    def update_transaction(self, transaction_id: str, data: dict) -> dict:
+        """Update an existing transaction"""
+        data["updated_at"] = datetime.utcnow()
+        
+        self.update_one(
+            {"transaction_id": transaction_id},
+            {"$set": data}
+        )
+
+    # -------------------------
+    # GET TRANSACTIONS
+    # -------------------------
+    def get_user_transactions(self, user_type: str, user_id: str, status: str = None) -> List[dict]:
+        """Get all transactions for a specific user"""
         query = {
+            "user_type": user_type,
+            "user_id": user_id
+        }
+        
+        if status:
+            query["status"] = status
+
+        return list(self.find(query).sort("created_at", -1))
+
+    def get_active_issue(self, user_type: str, user_id: str, book_name: str) -> Optional[dict]:
+        """Get active issue for a specific book"""
+        return self.find_one({
+            "user_type": user_type,
             "user_id": user_id,
-            "returned_at": None
-        }
-        return await self.async_find_many(query)
-    
-    async def get_book_history(self, user_id: str) -> List[Dict[str, Any]]:
-        """Get complete book borrowing history for a user"""
-        query = {
-            "user_id": user_id,
-            "returned_at": {"$ne": None}
-        }
-        return await self.async_find_many(query)
-    
-    async def get_fine_history(self, user_id: str) -> List[Dict[str, Any]]:
-        """Get fine payment history for a user"""
-        query = {
-            "user_id": user_id,
-            "fine_amount": {"$gt": 0}
-        }
-        return await self.async_find_many(query)
-    
-    async def get_total_books(self) -> int:
-        """Get total number of books in library"""
-        # This would typically query the books collection
-        # For now, return a mock count
-        return 1000
-    
-    async def get_issued_books_count(self) -> int:
-        """Get count of currently issued books"""
-        query = {"returned_at": None}
-        return await self.count_documents(query)
-    
-    async def get_overdue_books_count(self) -> int:
-        """Get count of overdue books"""
-        query = {
-            "returned_at": None,
-            "due_date": {"$lt": datetime.utcnow()}
-        }
-        return await self.count_documents(query)
-    
-    async def get_pending_fines_amount(self) -> float:
-        """Get total amount of pending fines"""
-        pipeline = [
-            {
-                "$match": {
-                    "returned_at": None,
-                    "due_date": {"$lt": datetime.utcnow()}
-                }
-            },
-            {
-                "$group": {
-                    "_id": None,
-                    "total_fine": {"$sum": "$fine_amount"}
-                }
-            }
-        ]
-        result = await self.aggregate(pipeline)
-        return result[0]["total_fine"] if result else 0.0
-    
-    async def get_student_fine_alerts(self) -> List[Dict[str, Any]]:
-        """Get students with high fines or overdue books"""
-        pipeline = [
-            {
-                "$match": {
-                    "returned_at": None,
-                    "due_date": {"$lt": datetime.utcnow()}
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$user_id",
-                    "overdue_books": {"$sum": 1},
-                    "total_fine": {"$sum": "$fine_amount"}
-                }
-            },
-            {
-                "$match": {
-                    "$or": [
-                        {"total_fine": {"$gt": 100}},
-                        {"overdue_books": {"$gt": 2}}
-                    ]
-                }
-            }
-        ]
-        return await self.aggregate(pipeline)
-    
-    async def get_all_current_books(self) -> List[Dict[str, Any]]:
-        """Get all currently borrowed books"""
-        query = {"returned_at": None}
-        return await self.async_find_many(query)
-    
-    async def get_overdue_books(self) -> List[Dict[str, Any]]:
+            "book_name": book_name,
+            "status": "issued"
+        })
+
+    def get_all_issued_books(self) -> List[dict]:
+        """Get all currently issued books"""
+        return list(self.find({"status": "issued"}).sort("created_at", -1))
+
+    def get_all_returned_books(self) -> List[dict]:
+        """Get all returned books history"""
+        return list(self.find({"status": "returned"}).sort("return_date", -1))
+
+    def get_overdue_books(self) -> List[dict]:
         """Get all overdue books"""
-        query = {
-            "returned_at": None,
-            "due_date": {"$lt": datetime.utcnow()}
+        now = datetime.utcnow()
+        return list(self.find({
+            "status": "issued",
+            "due_date": {"$lt": now}
+        }).sort("due_date", 1))
+
+    def get_user_overdue_books(self, user_type: str, user_id: str) -> List[dict]:
+        """Get overdue books for a specific user"""
+        now = datetime.utcnow()
+        return list(self.find({
+            "user_type": user_type,
+            "user_id": user_id,
+            "status": "issued",
+            "due_date": {"$lt": now}
+        }).sort("due_date", 1))
+
+    # -------------------------
+    # FINE MANAGEMENT
+    # -------------------------
+    def create_fine_record(self, fine_data: dict) -> dict:
+        """Create a fine record"""
+        fine = {
+            "fine_id": str(ObjectId()),
+            "user_type": fine_data["user_type"],
+            "user_id": fine_data["user_id"],
+            "amount": fine_data["amount"],
+            "fine_type": fine_data["fine_type"],
+            "description": fine_data.get("description"),
+            "status": "pending",
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
         }
-        return await self.async_find_many(query)
-    
-    async def get_department_statistics(self) -> List[Dict[str, Any]]:
-        """Get department-wise book usage statistics"""
-        # This would typically join with user data to get department info
-        # For now, return mock data
-        return [
-            {"department": "Computer Science", "books_issued": 150, "students": 45},
-            {"department": "Electronics", "books_issued": 120, "students": 38},
-            {"department": "Mechanical", "books_issued": 95, "students": 32},
-            {"department": "Civil", "books_issued": 80, "students": 28},
-            {"department": "Electrical", "books_issued": 70, "students": 25}
-        ]
-    
-    async def get_defaulter_students(self) -> List[Dict[str, Any]]:
-        """Get students with unpaid fines or overdue books"""
-        pipeline = [
-            {
-                "$match": {
-                    "$or": [
-                        {"returned_at": None, "due_date": {"$lt": datetime.utcnow()}},
-                        {"fine_amount": {"$gt": 0}}
-                    ]
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$user_id",
-                    "overdue_books": {
-                        "$sum": {
-                            "$cond": [
-                                {"$and": [
-                                    {"$eq": ["$returned_at", None]},
-                                    {"$lt": ["$due_date", datetime.utcnow()]}
-                                ]},
-                                1,
-                                0
-                            ]
-                        }
-                    },
-                    "pending_fine": {"$sum": "$fine_amount"}
-                }
-            },
-            {
-                "$match": {
-                    "$or": [
-                        {"overdue_books": {"$gt": 0}},
-                        {"pending_fine": {"$gt": 0}}
-                    ]
-                }
-            }
-        ]
-        return await self.aggregate(pipeline)
-    
-    async def get_monthly_trends(self, months: int = 12) -> Dict[str, List[Dict[str, Any]]]:
-        """Get monthly book issue and fine collection trends"""
-        start_date = datetime.utcnow() - timedelta(days=30 * months)
-        
-        # Book issue trends
-        book_pipeline = [
-            {
-                "$match": {
-                    "issued_at": {"$gte": start_date}
-                }
-            },
-            {
-                "$group": {
-                    "_id": {
-                        "year": {"$year": "$issued_at"},
-                        "month": {"$month": "$issued_at"}
-                    },
-                    "books_issued": {"$sum": 1}
-                }
-            },
-            {
-                "$sort": {"_id.year": 1, "_id.month": 1}
-            }
-        ]
-        
-        # Fine collection trends
-        fine_pipeline = [
-            {
-                "$match": {
-                    "timestamp": {"$gte": start_date},
-                    "fine_amount": {"$gt": 0}
-                }
-            },
-            {
-                "$group": {
-                    "_id": {
-                        "year": {"$year": "$timestamp"},
-                        "month": {"$month": "$timestamp"}
-                    },
-                    "fine_collected": {"$sum": "$fine_amount"}
-                }
-            },
-            {
-                "$sort": {"_id.year": 1, "_id.month": 1}
-            }
-        ]
-        
-        book_trends = await self.aggregate(book_pipeline)
-        fine_trends = await self.aggregate(fine_pipeline)
-        
+
+        result = fines_collection.insert_one(fine)
+        fine["_id"] = result.inserted_id
+        return fine
+
+    def get_pending_fines(self) -> List[dict]:
+        """Get all pending fines"""
+        return list(fines_collection.find({"status": "pending"}).sort("created_at", -1))
+
+    # -------------------------
+    # ACTIVITY LOGGING
+    # -------------------------
+    def get_recent_activity(self, limit: int = 20) -> List[dict]:
+        """Get recent library activity"""
+        return list(self.find().sort("created_at", -1).limit(limit))
+
+    def get_user_recent_activity(self, user_type: str, user_id: str, limit: int = 10) -> List[dict]:
+        """Get recent activity for a specific user"""
+        return list(self.find({
+            "user_type": user_type,
+            "user_id": user_id
+        }).sort("created_at", -1).limit(limit))
+
+    # -------------------------
+    # REMINDER LOGGING
+    # -------------------------
+    def log_reminder(self, reminder_data: dict) -> dict:
+        """Log a reminder that was sent"""
+        reminder = {
+            "reminder_id": str(ObjectId()),
+            "student_prn": reminder_data["student_prn"],
+            "student_name": reminder_data["student_name"],
+            "student_email": reminder_data["student_email"],
+            "overdue_books": reminder_data["overdue_books"],
+            "total_fine": reminder_data["total_fine"],
+            "reminder_sent_at": reminder_data["reminder_sent_at"],
+            "reminder_type": "manual"
+        }
+
+        # Add to transactions collection as a reminder record
+        return self.insert_one(reminder)
+
+    # -------------------------
+    # STATISTICS
+    # -------------------------
+    def get_transaction_stats(self) -> dict:
+        """Get transaction statistics"""
+        total_transactions = self.count_documents({})
+        issued_books = self.count_documents({"status": "issued"})
+        returned_books = self.count_documents({"status": "returned"})
+        overdue_books = len(self.get_overdue_books())
+
         return {
-            "book_issues": book_trends,
-            "fine_collections": fine_trends
+            "total_transactions": total_transactions,
+            "issued_books": issued_books,
+            "returned_books": returned_books,
+            "overdue_books": overdue_books
         }
-=======
-    # -------------------------
-    # ISSUES
-    # -------------------------
-    def get_all_issues(self) -> List[dict]:
-        return list(issues_collection.find({}))
-
-    def get_issues_by_user(
-        self,
-        user_type: str,
-        user_id: str
-    ) -> List[dict]:
-        return list(
-            issues_collection.find({
-                "user_type": user_type,
-                "user_id": user_id
-            })
-        )
-
-    def get_active_issues(self) -> List[dict]:
-        return list(
-            issues_collection.find({"status": "issued"})
-        )
-
-    # -------------------------
-    # RETURNS
-    # -------------------------
-    def get_all_returns(self) -> List[dict]:
-        return list(returns_collection.find({}))
-
-    def get_returns_by_user(
-        self,
-        user_type: str,
-        user_id: str
-    ) -> List[dict]:
-        return list(
-            returns_collection.find({
-                "user_type": user_type,
-                "user_id": user_id
-            })
-        )
-
-    # -------------------------
-    # FINES
-    # -------------------------
-    def get_all_fines(self) -> List[dict]:
-        return list(fines_collection.find({}))
-
-    def get_fines_by_user(
-        self,
-        user_type: str,
-        user_id: str
-    ) -> List[dict]:
-        return list(
-            fines_collection.find({
-                "user_type": user_type,
-                "user_id": user_id
-            })
-        )
-
-    # -------------------------
-    # DEPOSITS (STAFF)
-    # -------------------------
-    def get_all_deposits(self) -> List[dict]:
-        return list(deposits_collection.find({}))
-
-    def get_deposit_by_staff(
-        self,
-        emp_id: str
-    ) -> Optional[dict]:
-        return deposits_collection.find_one({"emp_id": emp_id})
->>>>>>> e6d8db4533e4bd76b2850fb35827a25a589cf1bb

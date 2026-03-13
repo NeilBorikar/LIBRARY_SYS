@@ -33,13 +33,6 @@ class LibraryStaffRepository(BaseRepository):
 
         return self.insert_one(data)
 
-<<<<<<< HEAD
-    def get_by_id(self, staff_id: str):
-        """Get library staff by ID"""
-        if staff_id == "current":
-            return None  # Handle "current" as special case in route
-        return self.find_by_id(staff_id)
-=======
     # -------------------------
     # AUTHENTICATE LIBRARY STAFF
     # -------------------------
@@ -108,101 +101,129 @@ class LibraryStaffRepository(BaseRepository):
             "user_type": user_type,
             "user_id": user_id,
             "book_id": ObjectId(book_id),
+            "book_name": book["title"],
             "issue_date": issue_date,
             "due_date": due_date,
             "status": "issued",
             "created_at": datetime.utcnow()
         }
 
-        result = issues_collection.insert_one(issue)
-        return str(result.inserted_id)
+        return issues_collection.insert_one(issue).inserted_id
 
     # -------------------------
     # RETURN BOOK
     # -------------------------
-    def return_book(
-        self,
-        user_type: str,
-        user_id: str,
-        book_id: str,
-        return_date: datetime
-    ) -> None:
+    def return_book(self, issue_id: str, return_date: datetime) -> dict:
 
-        issue = issues_collection.find_one({
-            "user_type": user_type,
-            "user_id": user_id,
-            "book_id": ObjectId(book_id),
-            "status": "issued"
-        })
-
+        issue = issues_collection.find_one({"_id": ObjectId(issue_id)})
         if not issue:
-            raise ValueError("Active issue record not found")
+            raise ValueError("Issue record not found")
 
-        issues_collection.update_one(
-            {"_id": issue["_id"]},
-            {"$set": {"status": "returned"}}
-        )
-
-        returns_collection.insert_one({
-            "user_type": user_type,
-            "user_id": user_id,
-            "book_id": ObjectId(book_id),
-            "issue_date": issue["issue_date"],
-            "return_date": return_date,
-            "created_at": datetime.utcnow()
-        })
-
+        book_id = issue["book_id"]
         books_collection.update_one(
-            {"_id": ObjectId(book_id)},
+            {"_id": book_id},
             {"$inc": {"quantity": 1}}
         )
 
-    # -------------------------
-    # CALCULATE FINE
-    # -------------------------
-    def calculate_fine(
-        self,
-        due_date: datetime,
-        return_date: datetime,
-        per_day: int = 5
-    ) -> int:
+        issues_collection.update_one(
+            {"_id": ObjectId(issue_id)},
+            {
+                "$set": {
+                    "status": "returned",
+                    "return_date": return_date,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
 
-        late_days = (return_date.date() - due_date.date()).days
-        return max(0, late_days * per_day)
+        return {"message": "Book returned successfully"}
 
     # -------------------------
     # COLLECT FINE
     # -------------------------
-    def collect_fine(
-        self,
-        user_type: str,
-        user_id: str,
-        book_id: str,
-        amount: int,
-        payment_mode: str
-    ) -> str:
+    def collect_fine(self, issue_id: str, amount: float) -> str:
 
         fine = {
-            "user_type": user_type,
-            "user_id": user_id,
-            "book_id": ObjectId(book_id),
+            "issue_id": ObjectId(issue_id),
             "amount": amount,
-            "payment_mode": payment_mode,
-            "paid_at": datetime.utcnow()
+            "collected_at": datetime.utcnow()
         }
 
-        result = fines_collection.insert_one(fine)
-        return str(result.inserted_id)
+        return fines_collection.insert_one(fine).inserted_id
 
     # -------------------------
-    # VIEW DATA
+    # GET BOOK BY NAME
     # -------------------------
-    def get_issued_books(self) -> List[dict]:
-        return list(issues_collection.find({"status": "issued"}))
+    def get_book_by_name(self, book_name: str) -> Optional[dict]:
+        return books_collection.find_one({"title": book_name})
 
-    def get_returned_books(self) -> List[dict]:
-        return list(returns_collection.find({}))
+    # -------------------------
+    # CREATE BOOK
+    # -------------------------
+    def create_book(self, book_data: dict) -> dict:
+        book = {
+            "title": book_data["book_name"],
+            "author": book_data.get("author", "Unknown"),
+            "isbn": book_data.get("isbn"),
+            "total_quantity": book_data["quantity"],
+            "available_quantity": book_data["quantity"],
+            "category": book_data.get("category"),
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
 
-    def get_fines_collected(self) -> List[dict]:
-        return list(fines_collection.find({}))
->>>>>>> e6d8db4533e4bd76b2850fb35827a25a589cf1bb
+        result = books_collection.insert_one(book)
+        book["_id"] = result.inserted_id
+        return book
+
+    # -------------------------
+    # UPDATE BOOK AVAILABILITY
+    # -------------------------
+    def update_book_availability(self, book_id: str, available_quantity: int) -> dict:
+        books_collection.update_one(
+            {"_id": ObjectId(book_id)},
+            {"$set": {"available_quantity": available_quantity, "updated_at": datetime.utcnow()}}
+        )
+
+    # -------------------------
+    # UPDATE BOOK QUANTITY
+    # -------------------------
+    def update_book_quantity(self, book_id: str, total_quantity: int, available_quantity: int) -> dict:
+        books_collection.update_one(
+            {"_id": ObjectId(book_id)},
+            {
+                "$set": {
+                    "total_quantity": total_quantity,
+                    "available_quantity": available_quantity,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+
+    # -------------------------
+    # GET LIBRARY STATISTICS
+    # -------------------------
+    def get_library_stats(self) -> dict:
+        total_books = books_collection.count_documents({})
+        issued_books = issues_collection.count_documents({"status": "issued"})
+        
+        # Calculate available books
+        available_books = 0
+        for book in books_collection.find({}, {"available_quantity": 1}):
+            available_books += book.get("available_quantity", 0)
+
+        return {
+            "total_books": total_books,
+            "issued_books": issued_books,
+            "available_books": available_books
+        }
+
+    # -------------------------
+    # GET STAFF STATISTICS
+    # -------------------------
+    def get_staff_statistics(self) -> dict:
+        total_staff = library_staff_collection.count_documents({})
+        
+        return {
+            "total_staff": total_staff
+        }
